@@ -38,7 +38,7 @@ def onnx_rnn_run(ctx):
 
 		# RNN takes the very last token
 		# Pad the input from the front
-		while len(ttx) < 768:
+		while len(ttx) < 1024:
 			ttx.insert(0, 0)
 
 		inputs = { "idx": ttx, "xx_att": xx_att, "aa_att": aa_att, "bb_att": bb_att, "pp_att": pp_att, "xx_ffn": xx_ffn }
