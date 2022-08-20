@@ -231,8 +231,9 @@ class RWKV_GPT(nn.Module):
 
 ############################################################################################################
 
-class RWKV_RNN(): # this is running in FP32 at this moment
+class RWKV_RNN(torch.nn.Module): # this is running in FP32 at this moment
     def __init__(self, MODEL_NAME, RUN_DEVICE, model_type, n_layer, n_embd, ctx_len):
+        super().__init__()
         self.RUN_DEVICE = RUN_DEVICE
         self.model_type = model_type
         self.n_layer = n_layer
@@ -347,7 +348,7 @@ class RWKV_RNN(): # this is running in FP32 at this moment
 
         return w.output.weight @ rwkv
 
-    def run(self, ctx):
+    def forward(self, ctx):
         w = self.w
         x = w.emb.weight[ctx[-1]]
 
