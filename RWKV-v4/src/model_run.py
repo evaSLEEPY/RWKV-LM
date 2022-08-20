@@ -380,14 +380,14 @@ class RWKV_RNN(torch.nn.Module): # this is running in FP32 at this moment
             q = w.head_q.weight @ x
 
             x = w.head.weight @ x
-            x = x.cpu().numpy().tolist()
+            #x = x.cpu().numpy().tolist()
 
             c = (self.hk @ q) / RWKV_HEAD_QK_DIM
             for i in range(len(c)):
                 x[ctx[i]] += c[i]
         else:
             x = w.head.weight @ x
-            x = x.cpu().numpy().tolist()
+            #x = x.cpu().numpy().tolist()
 
         xx_att_cd = []
         aa_att_cd = []
