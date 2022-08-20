@@ -68,7 +68,7 @@ def rnn_test(context):
 def rnn_export():
 	model = RWKV_RNN(MODEL_NAME, os.environ['RWKV_RUN_DEVICE'], model_type, n_layer, n_embd, ctx_len)
 
-	ctx = torch.randint(5000, (768,) ) + 100
+	ctx = torch.randint(5000, (1024,) ) + 100
 	xx_att = torch.zeros(12, 768)
 	aa_att = torch.zeros(12, 768)
 	bb_att = torch.zeros(12, 768)
