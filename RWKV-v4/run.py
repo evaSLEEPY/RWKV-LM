@@ -23,7 +23,7 @@ np.set_printoptions(precision=4, suppress=True, linewidth=200)
 # Set TOKEN_MODE to 'pile' if you want to test pre-trained pile models.
 ########################################################################################################
 
-TOKEN_MODE = 'char' # char / bpe / pile
+TOKEN_MODE = 'pile' # char / bpe / pile
 
 n_layer = 6
 n_embd = 512
@@ -47,7 +47,6 @@ elif TOKEN_MODE == 'pile':
     #---> you can set MODEL_NAME to your fine-tuned model <---
 
     MODEL_NAME = 'RWKV-4-Pile-169M-20220807-8023'
-    # MODEL_NAME = 'trained-11'
     n_layer = 12
     n_embd = 768
     ctx_len = 1024
