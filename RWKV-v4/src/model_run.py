@@ -298,8 +298,8 @@ class RWKV_RNN(torch.nn.Module): # this is running in FP32 at this moment
         return F.layer_norm(xx, (self.n_embd,), weight=w.weight, bias=w.bias)
 
     def FF(self, xx, w, name):
-        if name not in self.xx:
-            self.xx[name] = torch.zeros(self.n_embd, device=self.RUN_DEVICE)
+        #if name not in self.xx:
+        #    self.xx[name] = torch.zeros(self.n_embd, device=self.RUN_DEVICE)
         xk = xx * w.time_mix_k + self.xx[name] * (1 - w.time_mix_k)
         xr = xx * w.time_mix_r + self.xx[name] * (1 - w.time_mix_r)
         self.xx[name] = xx
@@ -311,11 +311,11 @@ class RWKV_RNN(torch.nn.Module): # this is running in FP32 at this moment
         return r * kv
 
     def SA(self, xx, w, name):
-        if name not in self.xx:
-            self.xx[name] = torch.zeros(self.n_embd, device=self.RUN_DEVICE)
-            self.aa[name] = torch.zeros(self.n_embd, device=self.RUN_DEVICE)
-            self.bb[name] = torch.zeros(self.n_embd, device=self.RUN_DEVICE)
-            self.pp[name] = torch.zeros(self.n_embd, device=self.RUN_DEVICE) - 1e30
+        #if name not in self.xx:
+        #    self.xx[name] = torch.zeros(self.n_embd, device=self.RUN_DEVICE)
+        #    self.aa[name] = torch.zeros(self.n_embd, device=self.RUN_DEVICE)
+        #    self.bb[name] = torch.zeros(self.n_embd, device=self.RUN_DEVICE)
+        #    self.pp[name] = torch.zeros(self.n_embd, device=self.RUN_DEVICE) - 1e30
 
         xk = xx * w.time_mix_k + self.xx[name] * (1 - w.time_mix_k)
         xv = xx * w.time_mix_v + self.xx[name] * (1 - w.time_mix_v)
@@ -348,11 +348,16 @@ class RWKV_RNN(torch.nn.Module): # this is running in FP32 at this moment
 
         return w.output.weight @ rwkv
 
-    def forward(self, ctx):
+    def forward(self, ctx, xx_att, aa_att, bb_att, pp_att, xx_ffn):
         w = self.w
         x = w.emb.weight[ctx[-1]]
 
         for i in range(self.n_layer):
+            self.xx[f'att.{i}'] = xx_att[i]
+            self.aa[f'att.{i}'] = aa_att[i]
+            self.bb[f'att.{i}'] = bb_att[i]
+            self.pp[f'att.{i}'] = pp_att[i]
+            self.xx[f'ffn.{i}'] = xx_ffn[i]
             if i == 0:
                 x = self.LN(x, w.blocks[i].ln0)
             if i == 0 and self.model_type == 'RWKV-ffnPre':
@@ -384,4 +389,23 @@ class RWKV_RNN(torch.nn.Module): # this is running in FP32 at this moment
             x = w.head.weight @ x
             x = x.cpu().numpy().tolist()
 
-        return x
+        xx_att_cd = []
+        aa_att_cd = []
+        bb_att_cd = []
+        pp_att_cd = []
+        xx_ffn_cd = []
+
+        for i in range(self.n_layer):
+             xx_att_cd.append( self.xx[f'att.{i}'] )
+             aa_att_cd.append( self.aa[f'att.{i}'] )
+             bb_att_cd.append( self.bb[f'att.{i}'] )
+             pp_att_cd.append( self.pp[f'att.{i}'] )
+             xx_ffn_cd.append( self.xx[f'ffn.{i}'] )
+
+        xx_att_r = torch.stack(xx_att_cd)
+        aa_att_r = torch.stack(aa_att_cd)
+        bb_att_r = torch.stack(bb_att_cd)
+        pp_att_r = torch.stack(pp_att_cd)
+        xx_ffn_r = torch.stack(xx_ffn_cd)
+
+        return x, xx_att_r, aa_att_r, bb_att_r, pp_att_r, xx_ffn_r
