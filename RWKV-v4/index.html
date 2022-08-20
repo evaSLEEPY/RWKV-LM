@@ -11,7 +11,7 @@
 			arr = arr.slice(0)
 
 			while (arr.length < size)
-				arr.unshift(0n)
+				arr.unshift(0)
 
 			return arr
 		}
@@ -63,13 +63,13 @@
 				var feeds = { idx: null, xx_att: xx_att, aa_att: aa_att, bb_att: bb_att, pp_att: pp_att, xx_ffn: xx_ffn }
 
 				// "\nIn a shocking finding"
-				var prompt = [187n, 688n, 247n, 29103n, 4560n]
+				var prompt = [187, 688, 247, 29103, 4560]
 				var ctx = [ prompt.shift() ]
 
 				// feed inputs and run
 				for (var i = 0; i < 64; i++) {
-					var idx_d = BigInt64Array.from( leading_pad(ctx, 1024) )
-					var idx = new ort.Tensor('int64', idx_d, [1024])
+					var idx_d = Int32Array.from( leading_pad(ctx, 1024) )
+					var idx = new ort.Tensor('int32', idx_d, [1024])
 
 					feeds.idx = idx
 
@@ -77,7 +77,7 @@
 					var token = greedy_sampling(results.x.data)
 
 					if (prompt.length == 0) {
-						ctx.push( BigInt(token) )
+						ctx.push( token )
 					} else {
 						ctx.push( prompt.shift() )
 					}
