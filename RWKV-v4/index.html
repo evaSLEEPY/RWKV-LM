@@ -7,15 +7,6 @@
 </head>
 <body>
 	<script type="text/javascript">
-		function leading_pad(arr, size) {
-			arr = arr.slice(0)
-
-			while (arr.length < size)
-				arr.unshift(0)
-
-			return arr
-		}
-
 		function greedy_sampling(x) {
 			var max_k = 0
 			var max_v = x[0]
@@ -45,7 +36,7 @@
 				// create a new session and load the specific model.
 				const session = await ort.InferenceSession.create('./rwkv.onnx', sessionOption)
 
-				const idx_d = Int32Array.from( leading_pad([], 1024) )
+				const idx_d = new Int32Array(1024)
 				const xx_att_d = new Float32Array(12*768)
 				const aa_att_d = new Float32Array(12*768)
 				const bb_att_d = new Float32Array(12*768)
