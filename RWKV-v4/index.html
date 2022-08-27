@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title></title>
-	<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+	<script src="ort.min.js"></script>
 </head>
 <body>
 	<script type="text/javascript">
@@ -54,25 +54,34 @@
 
 				// prepare feeds. use model input names as keys.
 				var feeds = { idx: idx, xx_att: xx_att, aa_att: aa_att, bb_att: bb_att, pp_att: pp_att, xx_ffn: xx_ffn }
+				var fetches = { xx_att_r: null, aa_att_r: null, bb_att_r: null, pp_att_r: null, xx_ffn_r: null }
 
 				// "\nIn a shocking finding"
 				var prompt = [187, 688, 247, 29103, 4560]
+				var gen = 64
+				var len = gen + prompt.length
 				var ctx = [ prompt.shift() ]
 
 				// feed inputs and run
-				for (var i = 0; i < 64; i++) {
+				for (var i = 0; i < len; i++) {
 					// RWKV only looks at the very last token in the context
 					// It may as well have been a single int32 input, but ONNX doesn't allow to pass just an int32, it has to be a tensor
 					// So instead of having a single-element tensor, I decided to leave it ctx_len sized
 					idx.data[1023] = ctx.at(-1)
 
-					var results = await session.run(feeds)
-					var token = greedy_sampling(results.x.data)
+					var results = await session.run(feeds, fetches)
 
 					if (prompt.length == 0) {
+						var token = greedy_sampling(results.x.data)
 						ctx.push( token )
 					} else {
 						ctx.push( prompt.shift() )
+
+						// Mode switch
+						// This will enable the final matmul
+						if (prompt.length == 0) {
+							fetches.x = null
+						}
 					}
 
 					feeds.xx_att = results.xx_att_r
@@ -81,7 +90,7 @@
 					feeds.pp_att = results.pp_att_r
 					feeds.xx_ffn = results.xx_ffn_r
 
-					console.log(1 + i, "/", 64)
+					console.log(1 + i, "/", len)
 				}
 
 				console.log(ctx + "")
