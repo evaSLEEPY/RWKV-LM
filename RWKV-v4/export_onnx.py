@@ -55,20 +55,25 @@ def rnn_test(context):
 	xx_ffn = torch.zeros(n_layer, n_embd)
 
 	ctx = tokenizer.encode(context)
+	ttx = [0]*ctx_len
+
+	print(context, end='', flush=True)
 
 	for i in range(64):
-		ttx = [] + ctx
-
-		while len(ttx) < ctx_len:
-			ttx.insert(0, 0)
+		if len(ctx) > 0:
+			ttx[-1] = ctx.pop(0)
 
 		x, xx_att, aa_att, bb_att, pp_att, xx_ffn  = model( torch.tensor(ttx), xx_att, aa_att, bb_att, pp_att, xx_ffn )
 
-		char = sample_logits( x.tolist() )
-		char = char.item()
+		if len(ctx) == 0:
+			char = sample_logits( x.tolist() )
+			char = char.item()
+			ttx[-1] = char
 
-		print(tokenizer.decode(char), end='', flush=True)
-		ctx.append(char)
+			print(tokenizer.decode(char), end='', flush=True)
+
+	print("")
+
 
 def rnn_export():
 	model = RWKV_RNN(MODEL_NAME, os.environ['RWKV_RUN_DEVICE'], model_type, n_layer, n_embd, ctx_len)
