@@ -28,7 +28,7 @@ from src.model_run import RWKV_RNN
 np.set_printoptions(precision=4, suppress=True, linewidth=200)
 
 tokenizer = PreTrainedTokenizerFast(tokenizer_file='20B_tokenizer.json')
-context = '\nIn a shocking finding,'
+context = '\nIn a shocking finding ,'
 
 ##############################################################################################################
 
@@ -92,6 +92,7 @@ def jit_rnn_test(context):
 	ttx = [0]*ctx_len
 
 	print(context, end='', flush=True)
+	print(len(ctx), ctx)
 
 	for i in range(64):
 		if len(ctx) > 0:
@@ -119,5 +120,8 @@ def rnn_export():
 	bb_att = torch.zeros(n_layer, n_embd)
 	pp_att = torch.zeros(n_layer, n_embd) - 1e30
 	xx_ffn = torch.zeros(n_layer, n_embd)
+	dic = {"idx": ctx, "xx_att": xx_att, "aa_att": aa_att, "bb_att":bb_att, "pp_att":pp_att, "xx_ffn":xx_ffn}
+	np.savez("input_dic.npz", **dic)
+	exit()
 
 	torch.onnx.export(model, args=(ctx, xx_att, aa_att, bb_att, pp_att, xx_ffn), f="rwkv.onnx", input_names = ["idx", "xx_att", "aa_att", "bb_att", "pp_att", "xx_ffn"], output_names = ["x", "xx_att_r", "aa_att_r", "bb_att_r", "pp_att_r", "xx_ffn_r"], verbose=True)

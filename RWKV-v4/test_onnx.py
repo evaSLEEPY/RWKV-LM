@@ -4,6 +4,7 @@ from torch.nn import functional as F
 import numpy as np
 import torch
 import time
+from tpu_perf.infer import SGInfer
 
 def lprint(txt):
 	print(txt, end='', flush=True)
@@ -42,9 +43,18 @@ def onnx_rnn_run(ctx):
 			ttx.insert(0, 0)
 
 		inputs = { "idx": ttx, "xx_att": xx_att, "aa_att": aa_att, "bb_att": bb_att, "pp_att": pp_att, "xx_ffn": xx_ffn }
-
 		outputs = session.run(output_names=["x", "xx_att_r", "aa_att_r", "bb_att_r", "pp_att_r", "xx_ffn_r"], input_feed=inputs)
 		state = outputs[0] # [50277]
+
+		# inputs = [ttx.numpy(), xx_att.numpy(), aa_att.numpy(), bb_att.numpy(), pp_att.numpy(), xx_ffn.numpy()]
+		inputs = [np.array(ttx).astype(np.int32), np.array(xx_att).astype(np.float32), np.array(aa_att).astype(np.float32), np.array(bb_att).astype(np.float32), np.array(pp_att).astype(np.float32), np.array(xx_ffn).astype(np.float32)]
+		# for i in inputs:
+		# 	print(i.dtype)
+		# import pdb; pdb.set_trace();
+		model = SGInfer("./transaction/rwkv-v4-169m.bmodel", devices=[0])
+		model.put(*inputs)
+		task_id, results, valid = model.get()
+		outputs = results
 
 		# [12][768]
 		xx_att = outputs[1]
@@ -71,7 +81,7 @@ def onnx_rnn_run(ctx):
 opt = SessionOptions()
 #opt.graph_optimization_level = GraphOptimizationLevel.ORT_DISABLE_ALL
 tokenizer = PreTrainedTokenizerFast(tokenizer_file="20B_tokenizer.json")
-session = InferenceSession("rwkv.onnx", opt)
+session = InferenceSession("./transaction/rwkv.onnx", opt)
 
 text = """\nIn a shocking finding,"""
 ctx = tokenizer.encode(text)
